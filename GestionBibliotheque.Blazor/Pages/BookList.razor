@@ -1,0 +1,193 @@
+@page "/books"
+@* @page "/books/{id:int}"   *@
+@inject NavigationManager NavigationManager
+
+@using GestionBibliotheque.Blazor.Models;
+@using GestionBibliotheque.Blazor.Services
+@inject IBookService BookService
+
+<div class="d-flex justify-content-between mb-3">
+    <h3>Liste des livres</h3>
+    <button class="btn btn-outline-success" @onclick="AddBook">
+        <i class="fas fa-plus"></i> Ajouter
+    </button>
+</div>
+@if (books == null)
+{
+    <p><em>Chargement...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th class="center-text">Titre</th>
+                <th class="center-text">Auteur</th>
+                <th class="center-text">Date de publication</th>
+                <th class="center-text">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var book in PagedBooks)
+            {
+                <tr>
+                    <td>@book.Title</td>
+                    <td>@book.Author</td>
+                    <td class="center-text">@book.PubDate.ToString("dd/MM/yyyy")</td>
+                    <td class="center-text">
+                        <button class="btn btn-info" @onclick="() => ViewBook(book.Id)"><i class="fas fa-eye"></i> </button>
+                        <button class="btn btn-primary" @onclick="() => EditBook(book.Id)">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-danger" @onclick="() => ShowDeleteConfirmation(book.Id)">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <Pagination TItem="BookDto" CurrentPage="currentPage" PageSize="pageSize" TotalItems="totalItems"
+        OnPageChanged="LoadPage" />
+}
+@if (selectedBook != null)
+{
+    <div  id="bookDetailsModal" class="modal fade show d-block" tabindex="-1" role="dialog" style="background-color: rgba(0, 0, 0, 0.5);" @onclick="HandleModalClick">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content" @onclick:stopPropagation="true">
+                <div class="modal-header">
+                    <h5 class="modal-title">Détails du livre</h5>
+                    @* <button type="button" class="close" @onclick="CloseModal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button> *@
+                </div>
+                <div class="modal-body">
+                    <p><strong>Titre:</strong> @selectedBook.Title</p>
+                    <p><strong>Auteur:</strong> @selectedBook.Author</p>
+                    <p><strong>Date de publication:</strong> @selectedBook.PubDate.ToString("dd/MM/yyyy")</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseModal">Fermer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+@if (isDeleteConfirmationVisible)
+{
+    <div id="deleteConfirmationModal" class="modal fade show d-block" tabindex="-1" role="dialog" style="background-color: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmation de suppression</h5>
+                    <button type="button" class="close" @onclick="HideDeleteConfirmation" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Êtes-vous sûr de vouloir supprimer ce livre ?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="HideDeleteConfirmation">Annuler</button>
+                    <button type="button" class="btn btn-danger" @onclick="DeleteBookConfirmed">Supprimer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+@code {
+    private List<BookDto>? books;
+    private BookDto? selectedBook;
+    [Parameter]
+    public int id { get; set; }
+
+    private int? deleteBookId;
+    private bool isBookDetailsModalVisible = false;
+    private bool isDeleteConfirmationVisible = false;
+
+    // Pagination
+    private List<BookDto> PagedBooks => books?.Skip((currentPage - 1) * pageSize).Take(pageSize).ToList() ?? new
+    List<BookDto>();
+    private int currentPage = 1;
+    private int pageSize = 5;
+    private int totalItems => books?.Count ?? 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        books = await BookService.GetBooksAsync();
+    }
+
+
+//-----------------------------------
+    private async Task ShowBookDetails(int id)
+    {
+        selectedBook = await BookService.GetBookByIdAsync(id);
+        isBookDetailsModalVisible = true;
+    }
+
+    private void CloseBookDetailsModal()
+    {
+        isBookDetailsModalVisible = false;
+        selectedBook = null;
+    }
+    private void ShowDeleteConfirmation(int id)
+    {
+        deleteBookId = id;
+        isDeleteConfirmationVisible = true;
+    }
+
+    private void HideDeleteConfirmation()
+    {
+        deleteBookId = null;
+        isDeleteConfirmationVisible = false;
+    }
+    private async Task DeleteBookConfirmed()
+    {
+        if (deleteBookId.HasValue)
+        {
+            await BookService.DeleteBookAsync(deleteBookId.Value);
+            books = await BookService.GetBooksAsync();
+            deleteBookId = null;
+            isDeleteConfirmationVisible = false;
+        }
+    }
+    //-----------------------------------   
+    private async Task ViewBook(int id)
+    {
+        selectedBook = await BookService.GetBookByIdAsync(id);
+    }
+    private void CloseModal()
+    {
+        selectedBook = null;
+    }
+    private void HandleModalClick()
+    {
+        CloseModal();
+    }
+    private void EditBook(int id)
+    {
+        // Rediriger vers la page de modification
+        NavigationManager.NavigateTo($"/editbook/{id}");
+    }
+
+    private void AddBook()
+    {
+        // Rediriger vers la page d'ajout de livre
+        NavigationManager.NavigateTo("/addbook");
+    }
+//-----------------------------------
+    private async Task DeleteBook(int id)
+    {
+        await BookService.DeleteBookAsync(id);
+        books = await BookService.GetBooksAsync();
+    }
+
+    private async Task LoadPage(int pageNumber)
+    {
+        currentPage =  pageNumber;
+    }
+
+}

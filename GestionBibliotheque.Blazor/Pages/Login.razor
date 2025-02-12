@@ -1,0 +1,39 @@
+@page "/login"
+@inject IAuthService AuthService
+@inject NavigationManager NavigationManager
+@using GestionBibliotheque.Blazor.Models;
+@using GestionBibliotheque.Blazor.Services.Auth;
+
+<h3  class="text-center">Login</h3>
+
+<div class="d-flex justify-content-center mt-4">
+    <div class="col-md-4 p-4 border rounded" style="height: 350px;">
+        <EditForm Model="loginModel" OnValidSubmit="HandleLogin">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label  for="username" class="mb-2" >Username:</label>
+        <InputText id="username" class="form-control form-control-sm mb-3" style="height: 40px;" @bind-Value="loginModel.Username" />
+    </div>
+    <div class="form-group">
+        <label for="password" class="mb-2">Password:</label>
+        <InputText id="password" class="form-control form-control-sm mb-3" style="height: 40px;"     @bind-Value="loginModel.Password" type="password" />
+    </div>
+    <button type="submit"  class="btn btn-primary btn-block mt-4">Login</button>
+</EditForm>
+    </div>
+</div>
+
+@code {
+    private LoginDTO loginModel = new LoginDTO();
+
+    private async Task HandleLogin()
+    {
+        var result = await AuthService.Login(loginModel);
+        if (result)
+        {
+            NavigationManager.NavigateTo("/");
+        }
+    }
+}
