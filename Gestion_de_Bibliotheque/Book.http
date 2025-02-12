@@ -1,0 +1,42 @@
+//Requette pour afficher la liste des Book
+GET http://localhost:5143/books/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImM5MDU3YmJlLWZkZTEtNGM5OS05ZTNkLWQxNDEwOWQxOTFlMSIsIm5iZiI6MTczOTI3OTUzMiwiZXhwIjoxNzM5MjgzMTMyLCJpYXQiOjE3MzkyNzk1MzIsImlzcyI6Imh0dHA6Ly9sb2NhbGhvc3Q6NTE0MyIsImF1ZCI6Imh0dHA6Ly9sb2NhbGhvc3Q6NTE0MyJ9.JMP1-yeqxw6JwtSFeO5YQK90-WzYqnlBRYFznBYCwKg
+
+###
+
+//Requette pour recperer un livre a partir d  e son Id
+GET http://localhost:5143/books/2
+###
+//Requette pour ajouter un  nouveau book
+POST http://localhost:5143/books
+Content-Type: application/json
+
+{
+    "title": "#############################",
+    "author": "Antoine de ################ Exupery",
+    "pubDate": "1986-06-18"
+}
+###
+//Requette pour modifier un book
+PUT http://localhost:5143/books/0
+Content-Type: application/json
+
+{
+  "title": "LA SOLITUDE",
+  "author": "YOUSSOU THIOMBANE",
+  "pubDate": "2030-06-18"
+}
+###
+//Requette pour supprimer un book
+DELETE http://localhost:5143/books/4
+
+###
+POST http://localhost:5143/login
+Content-Type: application/json
+
+{
+    "userName": "diallo",
+    "password": "Password123!"
+}
+
+
